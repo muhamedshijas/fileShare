@@ -47,7 +47,7 @@ function CommentsModal({ onClose }) {
         boxShadow={4}
         p={{ xs: 2, sm: 4 }}
         width="100%"
-        maxWidth="600px"
+        maxWidth={{md:"700px" ,sm:"400px", sm:"400px"}}
         maxHeight="90vh"
         overflow="auto"
         display="flex"

@@ -37,7 +37,7 @@ function InfoModal({ onClose }) {
         boxShadow={4}
         p={{ xs: 2, sm: 4 }}
         width="100%"
-        maxWidth="700px"
+        maxWidth={{md:"700px" ,sm:"600px", sm:"600px"}}
         maxHeight="90vh"
         overflow="auto"
       >
