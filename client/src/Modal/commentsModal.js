@@ -7,6 +7,8 @@ import {
   Divider,
   Stack,
   Paper,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 function CommentsModal({ onClose }) {
@@ -15,6 +17,9 @@ function CommentsModal({ onClose }) {
     { user: "Alice", text: "Great notes!" },
     { user: "John", text: "Thanks for sharing." },
   ]);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handlePost = () => {
     if (comment.trim() === "") return;
@@ -40,16 +45,23 @@ function CommentsModal({ onClose }) {
         bgcolor="white"
         borderRadius={3}
         boxShadow={4}
-        p={4}
+        p={{ xs: 2, sm: 4 }}
         width="100%"
         maxWidth="600px"
         maxHeight="90vh"
+        overflow="auto"
         display="flex"
         flexDirection="column"
       >
-        <Typography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
+        <Typography
+          variant={isMobile ? "h6" : "h5"}
+          fontWeight="bold"
+          textAlign="center"
+          mb={2}
+        >
           Comments
         </Typography>
+
         <Divider sx={{ mb: 2 }} />
 
         {/* Comment List */}
@@ -58,12 +70,28 @@ function CommentsModal({ onClose }) {
           overflow="auto"
           mb={2}
           px={1}
-          sx={{ maxHeight: "300px", scrollbarWidth: "thin" }}
+          sx={{
+            maxHeight: "300px",
+            scrollbarWidth: "thin",
+            "&::-webkit-scrollbar": {
+              width: "4px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#ccc",
+              borderRadius: "4px",
+            },
+          }}
         >
           <Stack spacing={1}>
             {comments.map((c, index) => (
               <Paper key={index} sx={{ p: 1.5, bgcolor: "#f9f9f9" }}>
-                <Typography variant="subtitle2">{c.user}</Typography>
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={600}
+                  gutterBottom
+                >
+                  {c.user}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {c.text}
                 </Typography>
@@ -73,7 +101,12 @@ function CommentsModal({ onClose }) {
         </Box>
 
         {/* Add Comment */}
-        <Stack direction="row" spacing={1} mb={2}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          mb={2}
+          alignItems="stretch"
+        >
           <TextField
             fullWidth
             size="small"
@@ -81,7 +114,12 @@ function CommentsModal({ onClose }) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
-          <Button variant="contained" onClick={handlePost}>
+          <Button
+            variant="contained"
+            disabled={!comment.trim()}
+            onClick={handlePost}
+            sx={{ minWidth: { sm: "100px" } }}
+          >
             Post
           </Button>
         </Stack>

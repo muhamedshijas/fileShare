@@ -6,12 +6,17 @@ import {
   Button,
   Stack,
   IconButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DownloadIcon from "@mui/icons-material/Download";
 
 function InfoModal({ onClose }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       position="fixed"
@@ -30,12 +35,19 @@ function InfoModal({ onClose }) {
         bgcolor="white"
         borderRadius={3}
         boxShadow={4}
-        p={4}
+        p={{ xs: 2, sm: 4 }}
         width="100%"
         maxWidth="700px"
+        maxHeight="90vh"
+        overflow="auto"
       >
         {/* Modal Title */}
-        <Typography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
+        <Typography
+          variant={isMobile ? "h6" : "h5"}
+          fontWeight="bold"
+          textAlign="center"
+          mb={2}
+        >
           File Details
         </Typography>
 
@@ -100,7 +112,12 @@ function InfoModal({ onClose }) {
 
 // Reusable Info row
 const InfoRow = ({ label, value }) => (
-  <Box display="flex" justifyContent="space-between">
+  <Box
+    display="flex"
+    flexDirection={{ xs: "column", sm: "row" }}
+    justifyContent="space-between"
+    gap={0.5}
+  >
     <Typography fontWeight={600}>{label}</Typography>
     <Typography color="text.secondary">{value}</Typography>
   </Box>
