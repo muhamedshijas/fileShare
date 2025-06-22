@@ -5,7 +5,8 @@ import {
   Stack,
   Card,
   IconButton,
-  Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InfoIcon from "@mui/icons-material/Info";
@@ -15,7 +16,6 @@ import DownloadIcon from "@mui/icons-material/Download";
 import InfoModal from "../Modal/InfoModal";
 import CommentsModal from "../Modal/commentsModal";
 
-// Dummy PDF Data
 const pdfFiles = [
   {
     id: 1,
@@ -46,14 +46,15 @@ const pdfFiles = [
 function Home() {
   const [infoShow, setInfoShow] = useState(false);
   const [commentShow, setCommentShow] = useState(false);
-  const handleInfoModal = () => {
-    setInfoShow(true);
-  };
-  const handleCommentModal = () => {
-    setCommentShow(true);
-  };
+
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const handleInfoModal = () => setInfoShow(true);
+  const handleCommentModal = () => setCommentShow(true);
+
   return (
-    <Box p={4}>
+    <Box p={2}>
       <Typography variant="h5" fontWeight="bold" mb={3}>
         Shared PDF Files
       </Typography>
@@ -65,21 +66,25 @@ function Home() {
             variant="outlined"
             sx={{
               borderRadius: 3,
-              px: 3,
+              px: 2,
               py: 2,
               display: "flex",
-              alignItems: "center",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
               justifyContent: "space-between",
-
+              gap: 2,
               transition: "0.3s",
               "&:hover": { boxShadow: 4 },
             }}
           >
+            {/* Left section */}
             <Stack direction="row" spacing={2} alignItems="center">
-              <PictureAsPdfIcon color="error" sx={{ fontSize: 40 }} />
+              <PictureAsPdfIcon color="error" sx={{ fontSize: 36 }} />
               <Box>
-                <Typography variant="h6">{file.subject}</Typography>
-                <Typography fontSize={14} color="text.secondary">
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {file.subject}
+                </Typography>
+                <Typography fontSize={13} color="text.secondary">
                   Semester: {file.semester}
                 </Typography>
                 <Typography fontSize={12} color="text.secondary">
@@ -88,7 +93,14 @@ function Home() {
               </Box>
             </Stack>
 
-            <Stack direction="row" spacing={1}>
+            {/* Icons section */}
+            <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              justifyContent={{ xs: "center", sm: "flex-end" }}
+              sx={{ minWidth: "120px" }}
+            >
               <IconButton title="Details" onClick={handleInfoModal}>
                 <InfoIcon />
               </IconButton>
@@ -106,8 +118,9 @@ function Home() {
         ))}
       </Stack>
 
-      {infoShow && <InfoModal />}
-      {commentShow && <CommentsModal />}
+      {/* Modals */}
+      {infoShow && <InfoModal onClose={() => setInfoShow(false)} />}
+      {commentShow && <CommentsModal onClose={() => setCommentShow(false)} />}
     </Box>
   );
 }
