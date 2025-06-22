@@ -5,8 +5,10 @@ function HomePage() {
   return (
     <div>
   <Navbar/>  
-    </div>
+
+    </div> 
   )
 }
 
-export default HomePage
+export default HomePage 
+ 
