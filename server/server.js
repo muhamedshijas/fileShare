@@ -1,5 +1,23 @@
-import express from 'express' 
-const app= express()
-app.listen(5000,()=>{
-    console.log("Running on 5000")
-})
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import path from "path";
+import userRouter from "./userRouter.js";
+import dbConnect from "./dbConnect.js";
+
+const app = express();
+dbConnect()
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.static(path.resolve() + "/public"));
+app.use("/", userRouter);
+app.listen(5000, () => {
+  console.log("Running on 5000");
+});
