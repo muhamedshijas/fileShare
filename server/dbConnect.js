@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 function dbConnect() {
   mongoose
-    .connect(
-      "mongodb+srv://shijushijas157:I5Qt4ApziFPRt7t9@cluster0.dweziwi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    )
+    .connect(process.env.MONGODB_URI)
     .then((result) => {
       console.log("Database connected");
     })

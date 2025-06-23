@@ -1,17 +1,48 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import React, { useState } from "react";
 import login from "../assets/images/login.jpg";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { useDispatch } from "react-redux";
 
 function Login() {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const dispatch = useDispatch();
 
-  const isdisabled = userName == "" || password == "";
+  const isDisabled = userName === "" || password === "";
+
   async function handleSubmit() {
-    await axios.post("login", { userName, password });
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post("/login", {
+        userName,
+        password,
+      });
+
+      if (res.data.success === false) {
+        setError(res.data.message);
+      } else {
+        dispatch({ type: "refresh" });
+      }
+    } catch (err) {
+      setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
+
   return (
     <Box
       sx={{
@@ -26,21 +57,19 @@ function Login() {
       <Box
         sx={{
           bgcolor: "white",
+          width: { xs: "90%", md: "900px" },
           height: { xs: "auto", md: "500px" },
-          width: { xs: "90%", sm: "90%", md: "900px" },
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          justifyContent: "center",
-          alignItems: "center",
           borderRadius: "12px",
           overflow: "hidden",
           boxShadow: 3,
         }}
       >
-        {/* Image Side */}
+        {/* Image Section */}
         <Box
           sx={{
-            width: { xs: "60%", md: "50%" },
+            width: { xs: "100%", md: "50%" },
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -49,7 +78,7 @@ function Login() {
         >
           <img
             src={login}
-            alt="Login Illustration"
+            alt="Login"
             style={{
               maxWidth: "100%",
               maxHeight: "400px",
@@ -59,24 +88,31 @@ function Login() {
           />
         </Box>
 
-        {/* Form Side */}
+        {/* Form Section */}
         <Box
           sx={{
-            width: { md: "50%", px: 4 },
+            width: { md: "50%" },
+            px: { xs: 3, md: 4 },
+            py: 2,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            gap: 2,
-            px: { xs: 3, md: 4 },
-            py: 2,
+            gap: 4,
           }}
         >
           <Typography variant="h4" fontWeight="bold" textAlign="center">
             Login to Your Account
           </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {error}
+            </Alert>
+          )}
+
           <TextField
             fullWidth
-            label="user name"
+            label="User Name"
             variant="outlined"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
@@ -89,43 +125,32 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
           <Button
             fullWidth
-            disabled={isdisabled}
+            disabled={isDisabled || loading}
+            onClick={handleSubmit}
             sx={{
               height: "50px",
               borderRadius: "8px",
-              bgcolor: isdisabled ? "grey.400" : "black",
+              bgcolor: isDisabled ? "grey.400" : "black",
               color: "white",
               "&:hover": {
-                bgcolor: isdisabled ? "grey.500" : "#333",
+                bgcolor: isDisabled ? "grey.500" : "#333",
               },
             }}
-            onClick={handleSubmit}
           >
-          
-            Login
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
           </Button>
-          <Box
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Typography> or </Typography>
-            <Typography>
-              {" "}
-              <Link
-                to="/signup"
-                style={{
-                  textDecoration: "none",
-                  fontWeight: "600",
-                  color: "Blue",
-                }}
-              >
-                Register as a new user
-              </Link>
-            </Typography>
+
+          <Box textAlign="center">
+            <Typography>or</Typography>
+            <Link
+              to="/signup"
+              style={{ textDecoration: "none", fontWeight: 600, color: "blue" }}
+            >
+              Register as a new user
+            </Link>
           </Box>
         </Box>
       </Box>

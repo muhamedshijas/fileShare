@@ -1,8 +1,15 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
 import React, { useState } from "react";
-import login from "../assets/images/login.jpg";
-import { Link } from "react-router-dom";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import login from "../assets/images/login.jpg";
 
 function SignUp() {
   const [name, setName] = useState("");
@@ -10,16 +17,36 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const isFormInvalid =
-    !name ||
-    !email ||
-    !password ||
-    !confirmPassword ||
-    password !== confirmPassword;
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  async function handleSubmit() {
-    await axios.post("/signup", { email, name, password });
-  }
+  const navigate = useNavigate();
+
+  const isFormInvalid =
+    !name || !email || !password || !confirmPassword || password !== confirmPassword;
+
+  const handleSubmit = async () => {
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post("http://localhost:5000/signup", {
+        name,
+        email,
+        password,
+      });
+
+      if (response.data.success === false) {
+        setErrorMsg(response.data.message);
+      } else {
+        navigate("/login");
+      }
+    } catch (err) {
+      setErrorMsg("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -35,12 +62,9 @@ function SignUp() {
       <Box
         sx={{
           bgcolor: "white",
-          height: { xs: "auto", md: "auto" },
-          width: { xs: "90%", sm: "90%", md: "900px" },
+          width: { xs: "90%", md: "900px" },
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          justifyContent: "center",
-          alignItems: "center",
           borderRadius: "12px",
           overflow: "hidden",
           boxShadow: 3,
@@ -49,7 +73,7 @@ function SignUp() {
         {/* Image Side */}
         <Box
           sx={{
-            width: { xs: "60%", md: "50%" },
+            width: { xs: "100%", md: "50%" },
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -72,29 +96,32 @@ function SignUp() {
         <Box
           sx={{
             width: { xs: "100%", md: "50%" },
+            p: { xs: 3, md: 4 },
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             gap: 2,
-            px: { xs: 3, md: 4 },
-            py: 2,
           }}
         >
           <Typography variant="h4" fontWeight="bold" textAlign="center">
             Register a New Account
           </Typography>
 
+          {errorMsg && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {errorMsg}
+            </Alert>
+          )}
+
           <TextField
             fullWidth
-            label="Name"
-            variant="outlined"
+            label="User Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <TextField
             fullWidth
             label="Email Address"
-            variant="outlined"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -102,7 +129,6 @@ function SignUp() {
             fullWidth
             label="Password"
             type="password"
-            variant="outlined"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -110,7 +136,6 @@ function SignUp() {
             fullWidth
             label="Confirm Password"
             type="password"
-            variant="outlined"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             error={password !== confirmPassword && confirmPassword.length > 0}
@@ -123,7 +148,8 @@ function SignUp() {
 
           <Button
             fullWidth
-            disabled={isFormInvalid}
+            disabled={isFormInvalid || loading}
+            onClick={handleSubmit}
             sx={{
               height: "50px",
               borderRadius: "8px",
@@ -133,30 +159,15 @@ function SignUp() {
                 bgcolor: isFormInvalid ? "grey.500" : "#333",
               },
             }}
-            onClick={handleSubmit}
           >
-            Register
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Register"}
           </Button>
 
-          <Box
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Typography> or </Typography>
-            <Typography>
-              <Link
-                to="/login"
-                style={{
-                  textDecoration: "none",
-                  fontWeight: "600",
-                  color: "Blue",
-                }}
-              >
-                Login to existing account
-              </Link>
-            </Typography>
+          <Box textAlign="center">
+            <Typography>or</Typography>
+            <Link to="/login" style={{ textDecoration: "none", color: "blue", fontWeight: 600 }}>
+              Login to existing account
+            </Link>
           </Box>
         </Box>
       </Box>
