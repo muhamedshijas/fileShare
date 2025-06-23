@@ -12,7 +12,7 @@ import ProfilePage from "./Pages/ProfilePage";
 
 function App() {
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "http://localhost:5000/";
+  axios.defaults.baseURL = "https://fileshare-sxgb.onrender.com/";
 
   const { user, refresh } = useSelector((state) => state);
   const dispatch = useDispatch();
