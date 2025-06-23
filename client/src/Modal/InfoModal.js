@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,10 +12,28 @@ import {
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DownloadIcon from "@mui/icons-material/Download";
+import axios from "axios";
 
-function InfoModal({ onClose }) {
+function InfoModal({ setShow, id }) {
+  const [file, setFile] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const handleClose = () => {
+    setShow(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await axios.get(`/getfile/${id}`);
+        if (!data.err) {
+          setFile(data.file);
+        }
+      } catch (err) {
+        console.error("Error fetching file info:", err);
+      }
+    })();
+  }, [id]);
 
   return (
     <Box
@@ -37,11 +55,10 @@ function InfoModal({ onClose }) {
         boxShadow={4}
         p={{ xs: 2, sm: 4 }}
         width="100%"
-        maxWidth={{md:"700px" ,sm:"600px", sm:"600px"}}
+        maxWidth={{ md: "700px", sm: "600px" }}
         maxHeight="90vh"
         overflow="auto"
       >
-        {/* Modal Title */}
         <Typography
           variant={isMobile ? "h6" : "h5"}
           fontWeight="bold"
@@ -53,55 +70,60 @@ function InfoModal({ onClose }) {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Details Section */}
         <Box mb={4}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Information
-          </Typography>
           <Stack spacing={1}>
-            <InfoRow label="Subject" value="Computer Networks" />
-            <InfoRow label="Tags" value="networks, OSI model, routing" />
-            <InfoRow label="Uploaded By" value="Muhamed Shijas" />
-            <InfoRow label="Uploaded On" value="22/10/2015" />
+            <InfoRow label="Title" value={file?.title || "N/A"} />
+            <InfoRow label="Subject" value={file?.subject || "N/A"} />
+            <InfoRow
+              label="Tags"
+              value={(file?.tags || []).join(", ") || "N/A"}
+            />
+            <InfoRow
+              label="Uploaded By"
+              value={file?.uploadedBy?.userName || "N/A"}
+            />
+            <InfoRow
+              label="Uploaded On"
+              value={
+                file?.createdAt
+                  ? new Date(file.createdAt).toLocaleDateString()
+                  : "N/A"
+              }
+            />
           </Stack>
         </Box>
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Stats Section */}
         <Box mb={4}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Engagement
-          </Typography>
           <Stack spacing={1}>
             <IconStat
               icon={<FavoriteBorderIcon color="error" />}
-              label="100 Likes"
+              label={`${file?.likes?.length} Likes`}
             />
             <IconStat
               icon={<ChatBubbleOutlineIcon color="primary" />}
-              label="100 Comments"
+              label={`${file?.comments?.length} Comments`}
             />
             <IconStat
               icon={<DownloadIcon color="success" />}
-              label="100 Downloads"
+              label="Downloads not tracked"
             />
           </Stack>
         </Box>
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Close Button */}
         <Button
           fullWidth
           variant="contained"
+          onClick={handleClose}
           sx={{
             borderRadius: 2,
             fontWeight: 600,
             bgcolor: "black",
             color: "white",
           }}
-          onClick={onClose}
         >
           Close
         </Button>

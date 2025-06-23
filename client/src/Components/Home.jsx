@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -7,51 +7,70 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  Tooltip,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InfoIcon from "@mui/icons-material/Info";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DownloadIcon from "@mui/icons-material/Download";
 import InfoModal from "../Modal/InfoModal";
 import CommentsModal from "../Modal/commentsModal";
-
-const pdfFiles = [
-  {
-    id: 1,
-    subject: "Computer Networks",
-    semester: "5",
-    uploadedBy: "John Doe",
-  },
-  {
-    id: 2,
-    subject: "Database Management",
-    semester: "4",
-    uploadedBy: "Alice Smith",
-  },
-  {
-    id: 3,
-    subject: "Operating Systems",
-    semester: "3",
-    uploadedBy: "Mark Taylor",
-  },
-  {
-    id: 4,
-    subject: "Web Development",
-    semester: "6",
-    uploadedBy: "Sara Ali",
-  },
-];
+import axios from "axios";
+import { useSelector } from "react-redux";
 
 function Home() {
+  const [pdfFiles, setPdfFiles] = useState([]);
+  const [refresh, setRefresh] = useState(false);
   const [infoShow, setInfoShow] = useState(false);
   const [commentShow, setCommentShow] = useState(false);
-
+  const [selectedId, setSelectedId] = useState();
+  const user = useSelector((state) => state.user.details);
+  const id = user._id;
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const handleInfoModal = () => setInfoShow(true);
+  const handleInfoModal = (id) => {
+    setInfoShow(true);
+    setSelectedId(id);
+  };
+
   const handleCommentModal = () => setCommentShow(true);
+
+  const handleLike = async (noteId) => {
+    try {
+      const { data } = await axios.post(`/like`, { noteId, id });
+      if (data.success) {
+        setRefresh((prev) => !prev);
+      }
+    } catch (err) {
+      console.error("Like error:", err);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await axios.get("/allfiles");
+        if (!data.err) {
+          setPdfFiles(data.allFiles);
+        }
+      } catch (err) {
+        console.error("Error loading files:", err);
+      }
+    })();
+  }, [refresh]);
+
+  const handleDownload = (url, filename = "file.pdf") => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.target = "_blank"; // optional, opens in new tab if needed
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <Box p={2}>
@@ -60,66 +79,87 @@ function Home() {
       </Typography>
 
       <Stack spacing={2}>
-        {pdfFiles.map((file) => (
-          <Card
-            key={file.id}
-            variant="outlined"
-            sx={{
-              borderRadius: 3,
-              px: 2,
-              py: 2,
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "flex-start", sm: "center" },
-              justifyContent: "space-between",
-              gap: 2,
-              transition: "0.3s",
-              "&:hover": { boxShadow: 4 },
-            }}
-          >
-            {/* Left section */}
-            <Stack direction="row" spacing={2} alignItems="center">
-              <PictureAsPdfIcon color="error" sx={{ fontSize: 36 }} />
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  {file.subject}
-                </Typography>
-                <Typography fontSize={13} color="text.secondary">
-                  Semester: {file.semester}
-                </Typography>
-                <Typography fontSize={12} color="text.secondary">
-                  Uploaded by: {file.uploadedBy}
-                </Typography>
-              </Box>
-            </Stack>
-
-            {/* Icons section */}
-            <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              justifyContent={{ xs: "center", sm: "flex-end" }}
-              sx={{ minWidth: "120px" }}
+        {pdfFiles.map((file) => {
+          const isLiked = file.likes?.includes(user._id);
+          return (
+            <Card
+              key={file._id}
+              variant="outlined"
+              sx={{
+                borderRadius: 3,
+                px: 2,
+                py: 2,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+                gap: 2,
+                transition: "0.3s",
+                "&:hover": { boxShadow: 4 },
+              }}
             >
-              <IconButton title="Details" onClick={handleInfoModal}>
-                <InfoIcon />
-              </IconButton>
-              <IconButton title="Like">
-                <FavoriteBorderIcon />
-              </IconButton>
-              <IconButton title="Comment" onClick={handleCommentModal}>
-                <ChatBubbleOutlineIcon />
-              </IconButton>
-              <IconButton title="Download">
-                <DownloadIcon />
-              </IconButton>
-            </Stack>
-          </Card>
-        ))}
+              {/* Left section */}
+              <Stack direction="row" spacing={2} alignItems="center">
+                <PictureAsPdfIcon color="error" sx={{ fontSize: 36 }} />
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {file.title}
+                  </Typography>
+                  <Typography fontSize={13} color="text.secondary">
+                    Semester: {file.semester}
+                  </Typography>
+                  <Typography fontSize={13} color="text.secondary">
+                    Subject: {file.subject}
+                  </Typography>
+                  <Typography fontSize={12} color="text.secondary">
+                    Uploaded by: {file.uploadedBy?.userName}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              {/* Icons section */}
+              <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                justifyContent={{ xs: "center", sm: "flex-end" }}
+                sx={{ minWidth: "120px" }}
+              >
+                <Tooltip title="Details">
+                  <IconButton onClick={() => handleInfoModal(file._id)}>
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title={isLiked ? "Unlike" : "Like"}>
+                  <IconButton onClick={() => handleLike(file._id)}>
+                    {isLiked ? (
+                      <FavoriteIcon color="error" />
+                    ) : (
+                      <FavoriteBorderIcon />
+                    )}
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Comment">
+                  <IconButton onClick={handleCommentModal}>
+                    <ChatBubbleOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Download">
+                  <IconButton onClick={() => handleDownload(file.fileUrl)}>
+                    <DownloadIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Card>
+          );
+        })}
       </Stack>
 
       {/* Modals */}
-      {infoShow && <InfoModal onClose={() => setInfoShow(false)} />}
+      {infoShow && <InfoModal id={selectedId} setShow={setInfoShow} />}
       {commentShow && <CommentsModal onClose={() => setCommentShow(false)} />}
     </Box>
   );

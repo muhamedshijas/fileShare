@@ -8,10 +8,10 @@ import dbConnect from "./dbConnect.js";
 
 const app = express();
 dotenv.config();
-dbConnect()
+dbConnect();
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["https://file-share-steel.vercel.app"],
     credentials: true,
   })
 );

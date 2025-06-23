@@ -1,6 +1,8 @@
 import User from "./models/userModel.js";
+import Note from "./models/fileSchema.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 export async function signup(req, res) {
   const { name, email, password } = req.body;
@@ -65,17 +67,87 @@ export async function checkAuth(req, res) {
 
   return res.json({ loggedIn: true, user });
 }
-export async function logout(req,res){
-  res.cookie("usertoken", "", {
-    httpOnly: true,
-    expires: new Date(0),
-    secure: true,
-    sameSite: "none",
-  }).json({ message: "logged out", error: false });
+export async function logout(req, res) {
+  res
+    .cookie("usertoken", "", {
+      httpOnly: true,
+      expires: new Date(0),
+      secure: true,
+      sameSite: "none",
+    })
+    .json({ message: "logged out", error: false });
   console.log("logged in");
 }
 
-export async function  fileUpload(req,res) {
-  console.log(req.body)
-  return res.json({success:true})
+export async function fileUpload(req, res) {
+  try {
+    const {
+      title,
+      subject,
+      semester,
+      tags,
+      fileUrl,
+      uploadedBy, // You may extract this from auth middleware in real apps
+    } = req.body;
+
+    if (!fileUrl || !subject || !semester || !Array.isArray(tags)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    const note = new Note({
+      title,
+      subject,
+      semester,
+      tags,
+      fileUrl,
+      uploadedBy,
+    });
+
+    await note.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Note uploaded successfully",
+      note,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
+  }
+}
+export async function getAllFiles(req, res) {
+  const allFiles = await Note.find().populate("uploadedBy").lean();
+  return res.json({ success: true, allFiles });
+}
+export async function getfileById(req, res) {
+  const id = req.params.id;
+
+  const file = await Note.findOne({
+    _id: new mongoose.Types.ObjectId(id),
+  }).populate("uploadedBy");
+
+  console.log(file);
+  return res.json({ success: true, file });
+}
+
+export async function likeNote(req, res) {
+  const { noteId, id } = req.body;
+
+  const note = await Note.findById(noteId);
+  if (!note)
+    return res.status(404).json({ success: false, message: "Note not found" });
+
+  const index = note.likes.indexOf(id);
+  if (index === -1) {
+    note.likes.push(id); // Like
+  } else {
+    note.likes.splice(index, 1); // Unlike
+  }
+
+  await note.save();
+  return res.json({ success: true, likesCount: note.likes.length });
 }

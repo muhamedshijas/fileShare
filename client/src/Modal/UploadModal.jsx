@@ -19,9 +19,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 
 function UploadModal({ setShow }) {
-  const user = useSelector((state) => {
-    return state.user.details;
-  });
+  const user = useSelector((state) => state.user.details);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -60,9 +58,11 @@ function UploadModal({ setShow }) {
   const handleDeleteTag = (tagToDelete) => {
     setTags(tags.filter((tag) => tag !== tagToDelete));
   };
+
   const handleShow = () => {
     setShow(false);
   };
+
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile || !allowedTypes.includes(selectedFile.type)) {
@@ -74,20 +74,22 @@ function UploadModal({ setShow }) {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
-    formData.append("upload_preset", "unsigned_notes_upload"); // your preset
+    formData.append("upload_preset", "notes_upload");
     formData.append("folder", "notes");
 
     try {
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dv5bvojzi/auto/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch("https://api.cloudinary.com/v1_1/dv5bvojzi/raw/upload", {
+        method: "POST",
+        body: formData,
+      });
+
       const data = await res.json();
+
       if (data.secure_url) {
-        setFileUrl(data.secure_url);
+        console.log(data);
+        
+        console.log("✅ Uploaded:", data.secure_url);
+        setFileUrl(data.secure_url); // ✅ Use the secure URL for downloading
       } else {
         alert("File upload failed.");
         setFile(null);
@@ -103,18 +105,29 @@ function UploadModal({ setShow }) {
 
   const handleFinalSubmit = async () => {
     if (!fileUrl) return alert("Please upload a file first.");
+    if (!title || !subject || !semester || tags.length === 0) {
+      return alert("Please fill in all fields before submitting.");
+    }
 
-    const { data } = await axios.post("/upload", {
-      title,
-      subject,
-      semester,
-      tags,
-      fileUrl,
-      uploadBy:user.userName
-    });
-    if (data.success) {
-      alert("file added successfully");
-      handleShow();
+    try {
+      const { data } = await axios.post("/upload", {
+        title,
+        subject,
+        semester,
+        tags,
+        fileUrl,
+        uploadedBy: user._id,
+      });
+
+      if (data.success) {
+        alert("File added successfully!");
+        handleShow();
+      } else {
+        alert("Failed to upload note.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting data.");
     }
   };
 

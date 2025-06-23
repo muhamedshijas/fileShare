@@ -29,6 +29,11 @@ const noteSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    title: {
+      type: String,
+      trim: true,
+      required: true,
+    },
     tags: {
       type: [String],
       required: true,
@@ -53,7 +58,10 @@ const noteSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    comments: [commentSchema],
+    comments: {
+      type: [commentSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
