@@ -8,6 +8,7 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -16,8 +17,10 @@ import axios from "axios";
 
 function InfoModal({ setShow, id }) {
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const handleClose = () => {
     setShow(false);
   };
@@ -31,6 +34,8 @@ function InfoModal({ setShow, id }) {
         }
       } catch (err) {
         console.error("Error fetching file info:", err);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [id]);
@@ -70,63 +75,76 @@ function InfoModal({ setShow, id }) {
 
         <Divider sx={{ mb: 3 }} />
 
-        <Box mb={4}>
-          <Stack spacing={1}>
-            <InfoRow label="Title" value={file?.title || "N/A"} />
-            <InfoRow label="Subject" value={file?.subject || "N/A"} />
-            <InfoRow
-              label="Tags"
-              value={(file?.tags || []).join(", ") || "N/A"}
-            />
-            <InfoRow
-              label="Uploaded By"
-              value={file?.uploadedBy?.userName || "N/A"}
-            />
-            <InfoRow
-              label="Uploaded On"
-              value={
-                file?.createdAt
-                  ? new Date(file.createdAt).toLocaleDateString()
-                  : "N/A"
-              }
-            />
-          </Stack>
-        </Box>
+        {loading ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="300px"
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <Box mb={4}>
+              <Stack spacing={1}>
+                <InfoRow label="Title" value={file?.title || "N/A"} />
+                <InfoRow label="Subject" value={file?.subject || "N/A"} />
+                <InfoRow
+                  label="Tags"
+                  value={(file?.tags || []).join(", ") || "N/A"}
+                />
+                <InfoRow
+                  label="Uploaded By"
+                  value={file?.uploadedBy?.userName || "N/A"}
+                />
+                <InfoRow
+                  label="Uploaded On"
+                  value={
+                    file?.createdAt
+                      ? new Date(file.createdAt).toLocaleDateString()
+                      : "N/A"
+                  }
+                />
+              </Stack>
+            </Box>
 
-        <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: 3 }} />
 
-        <Box mb={4}>
-          <Stack spacing={1}>
-            <IconStat
-              icon={<FavoriteBorderIcon color="error" />}
-              label={`${file?.likes?.length} Likes`}
-            />
-            <IconStat
-              icon={<ChatBubbleOutlineIcon color="primary" />}
-              label={`${file?.comments?.length} Comments`}
-            />
-            <IconStat
-              icon={<DownloadIcon color="success" />}
-              label="Downloads not tracked"
-            />
-          </Stack>
-        </Box>
+            <Box mb={4}>
+              <Stack spacing={1}>
+                <IconStat
+                  icon={<FavoriteBorderIcon color="error" />}
+                  label={`${file?.likes?.length || 0} Likes`}
+                />
+                <IconStat
+                  icon={<ChatBubbleOutlineIcon color="primary" />}
+                  label={`${file?.comments?.length || 0} Comments`}
+                />
+                <IconStat
+                  icon={<DownloadIcon color="success" />}
+                  label="Downloads not tracked"
+                />
+              </Stack>
+            </Box>
 
-        <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: 3 }} />
 
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleClose}
-          sx={{
-            borderRadius: 2,
-            fontWeight: 600,
-            bgcolor: "black",
-            color: "white",
-          }}
-        >
-          Close
-        </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleClose}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 600,
+                bgcolor: "black",
+                color: "white",
+              }}
+            >
+              Close
+            </Button>
+          </>
+        )}
       </Box>
     </Box>
   );

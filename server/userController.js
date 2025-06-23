@@ -51,7 +51,7 @@ export async function login(req, res) {
 }
 
 export async function checkAuth(req, res) {
-  console.log("hiii");
+
 
   const token = req.cookies.usertoken;
   if (!token) return res.json({ loggedIn: false });
@@ -151,3 +151,94 @@ export async function likeNote(req, res) {
   await note.save();
   return res.json({ success: true, likesCount: note.likes.length });
 }
+
+export const addComment = async (req, res) => {
+  try {
+    const { noteId, userId, text } = req.body;
+
+    if (!noteId || !userId || !text) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required." });
+    }
+
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Note not found." });
+    }
+
+    note.comments.push({
+      user: userId,
+      text: text.trim(),
+    });
+
+    await note.save();
+
+    return res.status(200).json({ success: true, message: "Comment added." });
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+export const getComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Note ID is required" });
+    }
+
+    // Find the note by ID and populate the user data for each comment
+    const note = await Note.findById(id).lean();
+
+    if (!note) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Note not found" });
+    }
+
+    // Format comments (optional: to clean output)
+    const formattedComments = note.comments.map((comment) => ({
+      user: comment.user || "Unknown",
+      text: comment.text,
+      commentedAt: comment.commentedAt,
+    }));
+
+    return res.status(200).json({ success: true, comments: formattedComments });
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const getMyUploads = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    console.log(userId);
+    
+    const notes = await Note.find({ uploadedBy: userId });
+    
+    res.json({ success: true, notes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const getMyLikedNotes = async (req, res) => {
+  try {
+    console.log("likes");
+    
+    const userId = req.params.id;
+    const likedNotes = await Note.find({ likes: userId });
+    res.json({ success: true, notes: likedNotes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

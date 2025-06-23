@@ -8,6 +8,7 @@ import {
   useMediaQuery,
   useTheme,
   Tooltip,
+  TextField,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InfoIcon from "@mui/icons-material/Info";
@@ -26,8 +27,11 @@ function Home() {
   const [infoShow, setInfoShow] = useState(false);
   const [commentShow, setCommentShow] = useState(false);
   const [selectedId, setSelectedId] = useState();
+  const [searchTerm, setSearchTerm] = useState("");
+
   const user = useSelector((state) => state.user.details);
-  const id = user._id;
+  const id = user?._id;
+
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -36,7 +40,10 @@ function Home() {
     setSelectedId(id);
   };
 
-  const handleCommentModal = () => setCommentShow(true);
+  const handleCommentModal = (id) => {
+    setSelectedId(id);
+    setCommentShow(true);
+  };
 
   const handleLike = async (noteId) => {
     try {
@@ -47,6 +54,16 @@ function Home() {
     } catch (err) {
       console.error("Like error:", err);
     }
+  };
+
+  const handleDownload = (url, filename = "file.pdf") => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   useEffect(() => {
@@ -62,24 +79,32 @@ function Home() {
     })();
   }, [refresh]);
 
-  const handleDownload = (url, filename = "file.pdf") => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.target = "_blank"; // optional, opens in new tab if needed
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Filter logic for search
+  const filteredFiles = pdfFiles.filter((file) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      file.title?.toLowerCase().includes(term) ||
+      file.tags?.some((tag) => tag.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <Box p={2}>
-      <Typography variant="h5" fontWeight="bold" mb={3}>
+      <Typography variant="h5" fontWeight="bold" mb={2}>
         Shared PDF Files
       </Typography>
 
+      {/* 🔍 Search Input */}
+      <TextField
+        fullWidth
+        placeholder="Search by title or tag..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 3 }}
+      />
+
       <Stack spacing={2}>
-        {pdfFiles.map((file) => {
+        {filteredFiles.map((file) => {
           const isLiked = file.likes?.includes(user._id);
           return (
             <Card
@@ -112,6 +137,9 @@ function Home() {
                     Subject: {file.subject}
                   </Typography>
                   <Typography fontSize={12} color="text.secondary">
+                    Tags: {file.tags?.join(", ") || "None"}
+                  </Typography>
+                  <Typography fontSize={12} color="text.secondary">
                     Uploaded by: {file.uploadedBy?.userName}
                   </Typography>
                 </Box>
@@ -142,7 +170,7 @@ function Home() {
                 </Tooltip>
 
                 <Tooltip title="Comment">
-                  <IconButton onClick={handleCommentModal}>
+                  <IconButton onClick={() => handleCommentModal(file._id)}>
                     <ChatBubbleOutlineIcon />
                   </IconButton>
                 </Tooltip>
@@ -160,7 +188,9 @@ function Home() {
 
       {/* Modals */}
       {infoShow && <InfoModal id={selectedId} setShow={setInfoShow} />}
-      {commentShow && <CommentsModal onClose={() => setCommentShow(false)} />}
+      {commentShow && (
+        <CommentsModal onClose={() => setCommentShow(false)} id={selectedId} />
+      )}
     </Box>
   );
 }

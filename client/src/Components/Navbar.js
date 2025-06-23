@@ -64,21 +64,7 @@ function Navbar() {
         </Typography>
 
         {/* Search Box */}
-        <Box my={isMobile ? 2 : 0} flex={1} maxWidth={400} mx={2}>
-          <TextField
-            fullWidth
-            placeholder="Search..."
-            size="small"
-            variant="outlined"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
+ 
 
         {/* Buttons */}
         <Stack

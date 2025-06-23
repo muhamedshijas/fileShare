@@ -1,9 +1,13 @@
 import express from "express";
 import {
+  addComment,
   checkAuth,
   fileUpload,
   getAllFiles,
+  getComments,
   getfileById,
+  getMyLikedNotes,
+  getMyUploads,
   likeNote,
   login,
   logout,
@@ -19,9 +23,9 @@ router.post("/upload", fileUpload);
 router.get("/allfiles", getAllFiles);
 router.get("/getfile/:id", getfileById);
 router.post("/like/", likeNote);
+router.post("/addcomment", addComment);
+router.get("/getcomments/:id", getComments);
+router.get("/getmyfiles/:id", getMyUploads);
+router.get("/getmylikedfiles/:id", getMyLikedNotes);
 
 export default router;
-
-//shijushijas157
-
-//I5Qt4ApziFPRt7t9

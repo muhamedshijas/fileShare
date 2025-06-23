@@ -8,7 +8,7 @@ import dbConnect from "./dbConnect.js";
 
 const app = express();
 dotenv.config();
-dbConnect();
+dbConnect()
 app.use(
   cors({
     origin: ["https://file-share-steel.vercel.app"],
@@ -17,7 +17,7 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit:  "50mb" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.resolve() + "/public"));
 app.use("/", userRouter);

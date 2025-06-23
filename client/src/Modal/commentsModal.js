@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -9,22 +9,59 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
-function CommentsModal({ onClose }) {
+function CommentsModal({ onClose, id }) {
   const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([
-    { user: "Alice", text: "Great notes!" },
-    { user: "John", text: "Thanks for sharing." },
-  ]);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const user = useSelector((state) => state.user.details);
 
-  const handlePost = () => {
-    if (comment.trim() === "") return;
-    setComments((prev) => [...prev, { user: "You", text: comment }]);
-    setComment("");
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        console.log(id);
+        
+        const { data } = await axios.get(`/getcomments/${id}`);
+        setComments(data.comments || []);
+      } catch (err) {
+        console.error("Failed to load comments:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  const handlePost = async () => {
+    if (comment.trim() === "" || !user) return;
+
+    setPosting(true);
+    try {
+      const { data } = await axios.post("/addcomment", {
+        noteId: id,
+        userId: user.userName,
+        text: comment.trim(),
+      });
+
+      if (data.success) {
+        setComments((prev) => [...prev, { user: user.userName, text: comment }]);
+        setComment("");
+      } else {
+        alert("Failed to post comment.");
+      }
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    } finally {
+      setPosting(false);
+    }
   };
 
   return (
@@ -47,7 +84,7 @@ function CommentsModal({ onClose }) {
         boxShadow={4}
         p={{ xs: 2, sm: 4 }}
         width="100%"
-        maxWidth={{md:"700px" ,sm:"400px", sm:"400px"}}
+        maxWidth={{ md: "700px", sm: "400px" }}
         maxHeight="90vh"
         overflow="auto"
         display="flex"
@@ -82,22 +119,28 @@ function CommentsModal({ onClose }) {
             },
           }}
         >
-          <Stack spacing={1}>
-            {comments.map((c, index) => (
-              <Paper key={index} sx={{ p: 1.5, bgcolor: "#f9f9f9" }}>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={600}
-                  gutterBottom
-                >
-                  {c.user}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {c.text}
-                </Typography>
-              </Paper>
-            ))}
-          </Stack>
+          {loading ? (
+            <Stack alignItems="center" py={2}>
+              <CircularProgress size={24} />
+            </Stack>
+          ) : comments.length > 0 ? (
+            <Stack spacing={1}>
+              {comments.map((c, index) => (
+                <Paper key={index} sx={{ p: 1.5, bgcolor: "#f9f9f9" }}>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    {c.user}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {c.text}
+                  </Typography>
+                </Paper>
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              No comments yet.
+            </Typography>
+          )}
         </Box>
 
         {/* Add Comment */}
@@ -116,11 +159,11 @@ function CommentsModal({ onClose }) {
           />
           <Button
             variant="contained"
-            disabled={!comment.trim()}
+            disabled={!comment.trim() || posting}
             onClick={handlePost}
             sx={{ minWidth: { sm: "100px" } }}
           >
-            Post
+            {posting ? "Posting..." : "Post"}
           </Button>
         </Stack>
 
