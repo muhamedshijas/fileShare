@@ -74,3 +74,8 @@ export async function logout(req,res){
   }).json({ message: "logged out", error: false });
   console.log("logged in");
 }
+
+export async function  fileUpload(req,res) {
+  console.log(req.body)
+  return res.json({success:true})
+}

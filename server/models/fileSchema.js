@@ -29,12 +29,11 @@ const noteSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    tags: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
+    tags: {
+      type: [String],
+      required: true,
+      trim: true,
+    },
     semester: {
       type: String,
       required: true,

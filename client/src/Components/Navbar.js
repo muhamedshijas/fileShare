@@ -19,6 +19,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import UploadModal from "../Modal/UploadModal";
 
 function Navbar() {
   const theme = useTheme();
@@ -26,7 +27,11 @@ function Navbar() {
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showDropdown, setShowDropdown] = useState(false);
+  const [show, setShow] = useState(false);
 
+  const handleModal = () => {
+    setShow(!show);
+  };
   const handleToggleDropdown = () => setShowDropdown((prev) => !prev);
   const handleCloseDropdown = () => setShowDropdown(false);
   async function handleLogout() {
@@ -86,6 +91,7 @@ function Navbar() {
             variant="contained"
             startIcon={<UploadIcon />}
             sx={{ bgcolor: "black", color: "White" }}
+            onClick={handleModal}
           >
             Upload
           </Button>
@@ -146,6 +152,7 @@ function Navbar() {
             </Paper>
           </Fade>
         </Stack>
+        {show && <UploadModal setShow={setShow} />}
       </Box>
     </ClickAwayListener>
   );
