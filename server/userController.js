@@ -247,28 +247,18 @@ export async function deleteNote(req, res) {
   try {
     const noteId = req.params.id;
 
+    // Check if note exists
     const note = await Note.findById(noteId);
-    if (!note)
+    if (!note) {
       return res
         .status(404)
         .json({ success: false, message: "Note not found" });
+    }
 
-    // Extract file path from URL (only if stored locally, e.g., /uploads/filename.pdf)
-    const filePath = path.join(path.resolve(), note.fileUrl);
- 
-    // Delete file from uploads folder
-    fs.unlink(filePath, async (err) => {
-      if (err) {
-        console.error("File delete error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "File delete failed" });
-      }
+    // Just delete from DB — keep the local file
+    await Note.findByIdAndDelete(noteId);
 
-      // Delete the note from DB
-      await Note.findByIdAndDelete(noteId);
-      return res.json({ success: true, message: "Note and file deleted" });
-    });
+    return res.json({ success: true, message: "Note deleted from database" });
   } catch (error) {
     console.error("Delete error:", error);
     res.status(500).json({ success: false, message: "Server error" });
