@@ -18,6 +18,8 @@ import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { useSelector } from "react-redux";
 
+
+
 function UploadModal({ setShow }) {
   const user = useSelector((state) => state.user.details);
   const theme = useTheme();
@@ -34,8 +36,8 @@ function UploadModal({ setShow }) {
 
   const allowedTypes = [
     "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-powerpoint",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   ];
@@ -65,6 +67,7 @@ function UploadModal({ setShow }) {
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
+
     if (!selectedFile || !allowedTypes.includes(selectedFile.type)) {
       return alert("Only PDF, DOC, DOCX, PPT files are allowed.");
     }
@@ -74,22 +77,17 @@ function UploadModal({ setShow }) {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
-    formData.append("upload_preset", "notes_upload");
-    formData.append("folder", "notes");
 
     try {
-      const res = await fetch("https://api.cloudinary.com/v1_1/dv5bvojzi/raw/upload", {
-        method: "POST",
-        body: formData,
+      const res = await axios.post("/uploadfile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (data.secure_url) {
-        console.log(data);
-        
-        console.log("✅ Uploaded:", data.secure_url);
-        setFileUrl(data.secure_url); // ✅ Use the secure URL for downloading
+      if (data.success && data.fileUrl) {
+        console.log("✅ Uploaded:", data.fileUrl);
+        setFileUrl(data.fileUrl);
       } else {
         alert("File upload failed.");
         setFile(null);

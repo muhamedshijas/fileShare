@@ -12,13 +12,16 @@ import {
   login,
   logout,
   signup,
+  uploadFile,
 } from "./userController.js";
+import { upload } from "./multer.js";
 
 const router = express.Router();
 router.post("/signup", signup);
 router.post("/login", login);
 router.get("/check", checkAuth);
 router.get("/logout", logout);
+router.post("/uploadfile", upload.single("file"), uploadFile);
 router.post("/upload", fileUpload);
 router.get("/allfiles", getAllFiles);
 router.get("/getfile/:id", getfileById);
