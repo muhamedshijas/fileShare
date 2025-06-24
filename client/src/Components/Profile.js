@@ -8,8 +8,11 @@ import {
   Stack,
   Avatar,
   Card,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useSelector } from "react-redux";
+import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 
 function Profile() {
@@ -30,14 +33,37 @@ function Profile() {
     }
   }, [id]);
 
-  const totalLikes = uploads.reduce((acc, note) => acc + note.likes?.length || 0, 0);
+  const handleDelete = async (fileId) => {
+    const confirm = window.confirm(
+      "Are you sure you want to delete this file?"
+    );
+    if (!confirm) return;
+
+    try {
+      const res = await axios.delete(`/deletenote/${fileId}`);
+      if (res.data.success) {
+        alert("Deleted successfully");
+        setUploads((prev) => prev.filter((file) => file._id !== fileId));
+      }
+    } catch (err) {
+      alert("Failed to delete");
+      console.error(err);
+    }
+  };
+
+  const totalLikes = uploads.reduce(
+    (acc, note) => acc + note.likes?.length || 0,
+    0
+  );
 
   return (
     <Box px={3} py={4}>
       {/* Profile Header */}
       <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
         <Stack direction="row" spacing={3} alignItems="center">
-          <Avatar sx={{ width: 72, height: 72, bgcolor: "black", color: "white" }}>
+          <Avatar
+            sx={{ width: 72, height: 72, bgcolor: "black", color: "white" }}
+          >
             {user?.userName?.[0] || "U"}
           </Avatar>
           <Box>
@@ -84,25 +110,49 @@ function Profile() {
           My Uploads
         </Typography>
         <Divider />
-        <Stack mt={2} spacing={2}>
+        <Grid container spacing={2} mt={1}>
           {uploads.length === 0 ? (
-            <Typography color="text.secondary">
+            <Typography color="text.secondary" sx={{ mt: 2 }}>
               You haven't uploaded any files yet.
             </Typography>
           ) : (
             uploads.map((file) => (
-              <Card key={file._id} sx={{ p: 2 }}>
-                <Typography fontWeight={600}>{file.title}</Typography>
-                <Typography fontSize={13} color="text.secondary">
-                  Subject: {file.subject}
-                </Typography>
-                <Typography fontSize={12} color="text.secondary">
-                  Likes: {file.likes?.length || 0}
-                </Typography>
-              </Card>
+              <Grid item key={file._id} width="600px">
+                <Card
+                  sx={{
+                    p: 2,
+                    position: "relative",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Tooltip title="Delete File">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        color: "red",
+                      }}
+                      onClick={() => handleDelete(file._id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Typography fontWeight={600}>{file.title}</Typography>
+                  <Typography fontSize={13} color="text.secondary">
+                    Subject: {file.subject}
+                  </Typography>
+                  <Typography fontSize={12} color="text.secondary">
+                    Likes: {file.likes?.length || 0}
+                  </Typography>
+                </Card>
+              </Grid>
             ))
           )}
-        </Stack>
+        </Grid>
       </Box>
 
       {/* Liked Files */}
@@ -111,25 +161,27 @@ function Profile() {
           Liked Files
         </Typography>
         <Divider />
-        <Stack mt={2} spacing={2}>
+        <Grid container spacing={2} mt={1}>
           {likedFiles.length === 0 ? (
-            <Typography color="text.secondary">
+            <Typography color="text.secondary" sx={{ mt: 2 }}>
               You haven't liked any files yet.
             </Typography>
           ) : (
             likedFiles.map((file) => (
-              <Card key={file._id} sx={{ p: 2 }}>
-                <Typography fontWeight={600}>{file.title}</Typography>
-                <Typography fontSize={13} color="text.secondary">
-                  Subject: {file.subject}
-                </Typography>
-                <Typography fontSize={12} color="text.secondary">
-                  Uploaded by: {file.uploadedBy?.userName || "Unknown"}
-                </Typography>
-              </Card>
+              <Grid item xs={12} sm={6} md={3} key={file._id}>
+                <Card sx={{ p: 2, height: "100%" }}>
+                  <Typography fontWeight={600}>{file.title}</Typography>
+                  <Typography fontSize={13} color="text.secondary">
+                    Subject: {file.subject}
+                  </Typography>
+                  <Typography fontSize={12} color="text.secondary">
+                    Uploaded by: {file.uploadedBy?.userName || "Unknown"}
+                  </Typography>
+                </Card>
+              </Grid>
             ))
           )}
-        </Stack>
+        </Grid>
       </Box>
     </Box>
   );

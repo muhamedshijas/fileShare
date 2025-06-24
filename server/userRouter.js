@@ -2,6 +2,7 @@ import express from "express";
 import {
   addComment,
   checkAuth,
+  deleteNote,
   fileUpload,
   getAllFiles,
   getComments,
@@ -30,5 +31,6 @@ router.post("/addcomment", addComment);
 router.get("/getcomments/:id", getComments);
 router.get("/getmyfiles/:id", getMyUploads);
 router.get("/getmylikedfiles/:id", getMyLikedNotes);
+router.delete("/deletenote/:id", deleteNote);
 
-export default router;
+export default router; 

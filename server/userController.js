@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 
 // ====================== Signup ======================
@@ -240,3 +242,35 @@ export const getMyLikedNotes = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+export async function deleteNote(req, res) {
+  try {
+    const noteId = req.params.id;
+
+    const note = await Note.findById(noteId);
+    if (!note)
+      return res
+        .status(404)
+        .json({ success: false, message: "Note not found" });
+
+    // Extract file path from URL (only if stored locally, e.g., /uploads/filename.pdf)
+    const filePath = path.join(path.resolve(), note.fileUrl);
+ 
+    // Delete file from uploads folder
+    fs.unlink(filePath, async (err) => {
+      if (err) {
+        console.error("File delete error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "File delete failed" });
+      }
+
+      // Delete the note from DB
+      await Note.findByIdAndDelete(noteId);
+      return res.json({ success: true, message: "Note and file deleted" });
+    });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
